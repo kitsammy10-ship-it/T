@@ -69,25 +69,14 @@
   
   /* Badges */
   .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .badge-high { background: #fef2f2; color: #dc2626; }
-  .badge-med { background: #fff7ed; color: #ea5800; }
-  .badge-low { background: #f0fdf4; color: #16a34a; }
   .badge-done { background: #dcfce7; color: #15803d; }
   .badge-pending { background: #fef9c3; color: #a16207; }
   
   /* Corner icons */
-  #theme-toggle { position: fixed; bottom: 56px; right: 12px; z-index: 100;
-    width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
+  #theme-toggle { position: fixed; bottom: 56px; right: 12px; z-index: 100; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
   #theme-toggle:hover { border-color: var(--purple-400); }
-  #about-btn { position: fixed; bottom: 12px; right: 12px; z-index: 100;
-    width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
+  #about-btn { position: fixed; bottom: 12px; right: 12px; z-index: 100; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
   #about-btn:hover { border-color: var(--purple-400); }
-  
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border-radius: 14px; padding: 24px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
-  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
   
   /* Toast */
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; }
@@ -98,6 +87,9 @@
   .lot-card .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
   .note-field { width: 100%; padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; margin-top: 4px; }
   .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  
+  /* Log Console */
+  #log-console { z-index: 150; }
 </style>
 </head>
 <body>
@@ -113,7 +105,7 @@
 <button id="theme-toggle" title="Toggle theme">🌙</button>
 <button id="about-btn" title="Toggle Log Console">?</button>
 <div id="toast"></div>
-<div id="log-console" style="display:none; position:fixed; bottom:0; left:0; right:0; height:200px; background:#1e1e1e; color:#0f0; font-family:monospace; font-size:11px; padding:8px; overflow-y:auto; z-index:150;">
+<div id="log-console" style="display:none; position:fixed; bottom:0; left:0; right:0; height:200px; background:#1e1e1e; color:#0f0; font-family:monospace; font-size:11px; padding:8px; overflow-y:auto;">
   <div style="display:flex; justify-content:space-between; margin-bottom:4px; color:#aaa;">
     <span>Console Log</span>
     <button onclick="document.getElementById('log-console').style.display='none'" style="background:none;border:none;color:#888;cursor:pointer">✕</button>
@@ -128,14 +120,9 @@
     <h1>🏪 Shop Portal</h1>
     <div class="card">
       <div class="form-row">
-        <label>Region</label>
-        <select id="shop-filter-region" onchange="populateASEDropdown()">
-        </select>
-        <label>Sub Region</label>
-        <select id="shop-filter-ase" onchange="populateShopDropdown()">
-        </select>
         <label>Shop</label>
         <select id="shop-filter" onchange="refreshShop()">
+          <option value="">-- Select Shop --</option>
         </select>
       </div>
     </div>
@@ -159,26 +146,6 @@
         <button class="btn btn-primary" onclick="createLot()">Create Lot</button>
       </div>
       <p style="font-size:12px;color:var(--text-secondary)">Columns required: From, To, Style, Colour, Size, Qty</p>
-    </div>
-    <div class="card">
-      <h3>Sales Upload & Reports</h3>
-      <div class="form-row">
-        <select id="bmq-sales-lot-select"></select>
-        <button class="btn" onclick="pickSalesFolderBMQ()">📁 Upload Sales Folder</button>
-      </div>
-      <p style="font-size:12px;color:var(--text-secondary)" id="bmq-sales-status"></p>
-    </div>
-    <div id="bmq-report" style="display:none">
-      <div class="card">
-        <div class="action-btns">
-          <button class="btn btn-primary" onclick="downloadXLSX()">⬇ Download XLSX</button>
-          <button class="btn" onclick="downloadPDF()">⬇ Download PDF</button>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Report Preview</h3>
-        <div class="table-wrap" id="bmq-report-table"></div>
-      </div>
     </div>
     <div class="card">
       <h3>All Lots</h3>
@@ -207,10 +174,6 @@
     </div>
     <div class="card">
       <h3>My Lots</h3>
-      <div class="form-row">
-        <label>Filter Sub Region</label>
-        <select id="ase-filter-select" onchange="refreshASE()"></select>
-      </div>
       <div id="ase-lots"></div>
     </div>
   </div>
@@ -236,10 +199,6 @@
     </div>
     <div class="card">
       <h3>Dashboard</h3>
-      <div class="form-row">
-        <label>Filter Region</label>
-        <select id="asm-filter-region" onchange="refreshASM()"></select>
-      </div>
       <div id="asm-dashboard"></div>
     </div>
   </div>
@@ -248,13 +207,12 @@
 
 <script>
 /* ============================================================
-   PULLOUT PORTAL — IndexedDB + SheetJS + jsPDF (FIXED)
+   PULLOUT PORTAL — IndexedDB + SheetJS (FIXED V2)
    ============================================================ */
 
 const DB_NAME = 'pullout-portal'; const DB_VER = 1;
-let db; let currentView = 'shop'; let currentReportData = null;
+let db; let currentView = 'shop';
 
-/* ========== CRITICAL: MISSING UTILITY FUNCTION ========== */
 function esc(str) {
   if (!str) return '';
   const div = document.createElement('div');
@@ -262,7 +220,6 @@ function esc(str) {
   return div.innerHTML;
 }
 
-// ASM/ASE/Shop hierarchy from Book5.xlsx
 const ASM_REGIONS = [
   { asm: 'SOUTH JEDDAH', ases: [
       { ase: 'SJ1', mobile: '0507236320', shops: ['M3011-MCJ', 'M3116-EMJ', 'M3139-CCB'] },
@@ -298,8 +255,7 @@ const ASM_REGIONS = [
   ] }
 ];
 
-const SHOP_TO_ASM = {};
-const SHOP_TO_ASE = {};
+const SHOP_TO_ASM = {}, SHOP_TO_ASE = {};
 ASM_REGIONS.forEach(r => {
   r.ases.forEach(a => {
     a.shops.forEach(s => {
@@ -309,69 +265,37 @@ ASM_REGIONS.forEach(r => {
   });
 });
 
-function getASM(shopCode) { return SHOP_TO_ASM[shopCode] || 'Unknown'; }
-function getASE(shopCode) { return SHOP_TO_ASE[shopCode] || 'Unknown'; }
+function getASM(s) { return SHOP_TO_ASM[s] || 'Unknown'; }
+function getASE(s) { return SHOP_TO_ASE[s] || 'Unknown'; }
 
 const REGION_MAP = {};
-ASM_REGIONS.forEach(r => {
-  REGION_MAP[r.asm] = r.ases.flatMap(a => a.shops);
-});
+ASM_REGIONS.forEach(r => { REGION_MAP[r.asm] = r.ases.flatMap(a => a.shops); });
 const SHOP_TO_REGION = {};
 Object.entries(REGION_MAP).forEach(([r, shops]) => shops.forEach(s => SHOP_TO_REGION[s] = r));
-function getRegion(shopCode) { return SHOP_TO_REGION[shopCode] || 'Unknown'; }
+function getRegion(s) { return SHOP_TO_REGION[s] || 'Unknown'; }
 
 const SHOP_CONTACT_MAP = {
-  "M3056-HML": { to: "M3056@giordano.sa", cc: ["imran.mannan@giordano.com.sa", "sa.bmq@giordano.com.sa"] },
-  "M3067-LBX": { to: "M3067@giordano.sa", cc: ["imran.mannan@giordano.com.sa", "sa.bmq@giordano.com.sa"] }
-};
-
-const REGION_CC_MAP = {
-  "Central": ["imran.mannan@giordano.com.sa", "sa.bmq@giordano.com.sa"],
-  "Eastern": ["saleem.syed@giordano.com.sa", "khaja.nizam@giordano.com.sa"],
-  "Makka": ["jafar@giordano.com.sa", "yasin@giordano.com.sa"],
-  "Jeddah": ["omar.basaba@giordano.com.sa", "saeedf@giordano.com.sa"],
-  "Madina": ["hassan@giordano.com.sa", "danishm@giordano.com.sa"],
-  "T2": ["siddiq.ahmed@giordano.com.sa", "sa.bmq@giordano.com.sa"],
-  "SouthJeddah": ["sa.bmq@giordano.com.sa", "waleed@giordano.com.sa"]
+  "M3056-HML": { to: "M3056@giordano.sa", cc: ["imran.mannan@giordano.com.sa", "sa.bmq@giordano.com.sa"] }
 };
 
 function getShopEmail(shopCode) {
-  const contact = SHOP_CONTACT_MAP[shopCode];
-  return contact ? contact.to : shopCode + '@giordano.sa';
-}
-
-function getRegionCCs(shopCode) {
-  const contact = SHOP_CONTACT_MAP[shopCode];
-  if (contact) return contact.cc;
-  const region = getRegion(shopCode);
-  return REGION_CC_MAP[region] || [];
-}
-
-function getASECCs(aseCode) {
-  for (const r of ASM_REGIONS) {
-    const ase = r.ases.find(a => a.ase === aseCode);
-    if (ase) return REGION_CC_MAP[r.asm] || [];
-  }
-  return [];
-}
-
-function getASMCCs(asmName) {
-  return REGION_CC_MAP[asmName] || [];
+  const c = SHOP_CONTACT_MAP[shopCode];
+  return c ? c.to : shopCode + '@giordano.sa';
 }
 
 function openDB() {
-  return new Promise((resolve, reject) => {
+  return new Promise((res, rej) => {
     const req = indexedDB.open(DB_NAME, DB_VER);
     req.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('lots')) d.createObjectStore('lots', { keyPath: 'id' });
       if (!d.objectStoreNames.contains('responses')) d.createObjectStore('responses', { keyPath: 'id' });
-      if (!d.objectStoreNames.contains('metadata')) d.createObjectStore('metadata', { keyPath: 'key' });
     };
-    req.onsuccess = () => { db = req.result; resolve(db); };
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; res(db); };
+    req.onerror = () => rej(req.error);
   });
 }
+
 function dbPut(store, val) { return new Promise((res, rej) => { const tx = db.transaction(store, 'readwrite'); tx.objectStore(store).put(val); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
 function dbGetAll(store) { return new Promise((res, rej) => { const tx = db.transaction(store, 'readonly'); const req = tx.objectStore(store).getAll(); req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); }
 function dbGet(store, key) { return new Promise((res, rej) => { const tx = db.transaction(store, 'readonly'); const req = tx.objectStore(store).get(key); req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); }
@@ -380,66 +304,53 @@ function dbDel(store, key) { return new Promise((res, rej) => { const tx = db.tr
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function today() { return new Date().toISOString().split('T')[0]; }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function logUI(...args) { console.log(...args); const logEl = document.getElementById('log-content'); if (logEl) { const div = document.createElement('div'); div.textContent = `[${new Date().toLocaleTimeString()}] ${args.join(' ')}`; div.style.color = '#0f0'; logEl.appendChild(div); logEl.scrollTop = logEl.scrollHeight; } }
 
 function generateEmailBody(lot, shopCode) {
   const lines = lot.lines.filter(l => l.to === shopCode);
   if (!lines.length) return '';
-  const dateStr = new Date(lot.day).toLocaleDateString('en-GB');
-  let html = `<html><head><style>body{font-family:Arial,sans-serif;font-size:13px}table{border-collapse:collapse;width:100%;margin-top:16px}th{background:#7c3aed;color:#fff;padding:10px}td{border:1px solid #e2e8f0;padding:8px}</style></head><body>
-    <p>Dear ${esc(shopCode)},</p><p>Please confirm receipt of:</p>
+  let html = `<html><head><style>table{border-collapse:collapse;width:100%}th{background:#7c3aed;color:#fff;padding:10px}td{border:1px solid #e2e8f0;padding:8px}</style></head><body>
+    <p>Dear ${esc(shopCode)},</p><p>Pullout confirmation:</p>
     <table><thead><tr><th>From</th><th>To</th><th>Style</th><th>Colour</th><th>Size</th><th>Qty</th></tr></thead><tbody>`;
   lines.forEach(line => {
     html += `<tr><td>${esc(line.from)}</td><td>${esc(line.to)}</td><td>${esc(line.style)}</td><td>${esc(line.colour)}</td><td>${esc(line.size)}</td><td>${line.qty}</td></tr>`;
   });
-  html += `</tbody></table></body></html>`;
+  html += `</tbody></table><p>Please tick ✓ to confirm receipt.</p></body></html>`;
   return html;
 }
 
-function generateEmailSubject(lot, shopCode) {
-  const dateStr = new Date(lot.day).toLocaleDateString('en-GB');
-  return `Pullout Lot #${lot.lotId} - ${dateStr}`;
+function generateEmailSubject(lot) {
+  return `Pullout Lot #${lot.lotId} - ${new Date(lot.day).toLocaleDateString('en-GB')}`;
 }
 
-function getEmailCC(shopCode, view) {
-  let cc = [];
-  if (view === 'shop') cc = getRegionCCs(shopCode);
-  else if (view === 'ase') cc = getASECCs(getASE(shopCode));
-  else if (view === 'asm') cc = getASMCCs(getASM(shopCode));
-  else if (view === 'bmq') cc = REGION_CC_MAP[getRegion(shopCode)] || [];
-  return [...new Set(cc)];
-}
-
-async function sendEmailDraftForLot(lotId, shopCode, view) {
+async function sendEmailDraftForLot(lotId, shopCode) {
   const lot = await dbGet('lots', lotId);
   if (!lot) return toast('Lot not found');
   const to = getShopEmail(shopCode);
-  if (!to) return toast('No email for: ' + shopCode);
-  const cc = getEmailCC(shopCode, view).join(',');
-  const subject = encodeURIComponent(generateEmailSubject(lot, shopCode));
+  if (!to) return toast('No email for ' + shopCode);
+  const subject = encodeURIComponent(generateEmailSubject(lot));
   const body = encodeURIComponent(generateEmailBody(lot, shopCode));
-  window.location.href = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${subject}&body=${body}`;
-  toast('Opening email draft');
+  window.open(`mailto:${to}?subject=${subject}&body=${body}`, '_blank');
+  toast('Email opened for ' + shopCode);
 }
 
-async function sendEmailBatch(lotId, shopCodes, view) {
+async function sendEmailBatch(lotId, shopCodes) {
   const lot = await dbGet('lots', lotId);
   if (!lot) return toast('Lot not found');
   for (const shopCode of shopCodes) {
     const to = getShopEmail(shopCode);
-    if (!to) continue;
-    const cc = getEmailCC(shopCode, view).join(',');
-    const subject = encodeURIComponent(generateEmailSubject(lot, shopCode));
-    const body = encodeURIComponent(generateEmailBody(lot, shopCode));
-    window.open(`mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${subject}&body=${body}`, '_blank');
-    await new Promise(r => setTimeout(r, 300));
+    if (to) {
+      const subject = encodeURIComponent(generateEmailSubject(lot));
+      const body = encodeURIComponent(generateEmailBody(lot, shopCode));
+      window.open(`mailto:${to}?subject=${subject}&body=${body}`, '_blank');
+      await new Promise(r => setTimeout(r, 300));
+    }
   }
-  toast(`Opened ${shopCodes.length} email drafts`);
+  toast(`Emails opened for ${shopCodes.length} shops`);
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    location.hash = btn.dataset.view;
-  });
+  btn.addEventListener('click', () => { location.hash = btn.dataset.view; });
 });
 
 function switchView(view) {
@@ -453,25 +364,10 @@ async function refreshView() {
   const view = ['shop','bmq','ase','asm'].includes(hash) ? hash : 'shop';
   if (view !== currentView) switchView(view);
   switch (view) {
-    case 'shop': refreshShop(); break;
-    case 'bmq': refreshBMQ(); break;
-    case 'ase': refreshASE(); break;
-    case 'asm': refreshASM(); break;
-  }
-}
-
-function logUI(...args) {
-  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-  const time = new Date().toLocaleTimeString();
-  console.log(time, ...args);
-  const logEl = document.getElementById('log-content');
-  if (logEl) {
-    const div = document.createElement('div');
-    div.textContent = `[${time}] ${msg}`;
-    div.style.marginBottom = '2px';
-    div.style.color = '#0f0';
-    logEl.appendChild(div);
-    logEl.scrollTop = logEl.scrollHeight;
+    case 'shop': await refreshShop(); break;
+    case 'bmq': await refreshBMQ(); break;
+    case 'ase': await refreshASE(); break;
+    case 'asm': await refreshASM(); break;
   }
 }
 
@@ -479,7 +375,6 @@ function parsePulloutXLSX(arrayBuffer) {
   return new Promise((resolve, reject) => {
     try {
       const wb = XLSX.read(arrayBuffer, { type: 'array' });
-      logUI('📊 Sheets:', wb.SheetNames);
       const allRows = [];
       wb.SheetNames.forEach(sheet => {
         const ws = wb.Sheets[sheet];
@@ -489,10 +384,7 @@ function parsePulloutXLSX(arrayBuffer) {
         const fromIdx = headers.indexOf('from'), toIdx = headers.indexOf('to');
         const styleIdx = headers.indexOf('style'), colIdx = headers.indexOf('colour');
         const sizeIdx = headers.indexOf('size'), qtyIdx = headers.indexOf('qty');
-        if (fromIdx < 0 || toIdx < 0) {
-          toast(`Missing From/To in "${sheet}"`);
-          return;
-        }
+        if (fromIdx < 0 || toIdx < 0) { toast(`Missing From/To in "${sheet}"`); return; }
         for (let i = 1; i < data.length; i++) {
           const row = data[i];
           if (!row[fromIdx] && !row[toIdx]) continue;
@@ -506,10 +398,8 @@ function parsePulloutXLSX(arrayBuffer) {
           });
         }
       });
-      logUI('✅ Parsed:', allRows.length);
       resolve(allRows);
     } catch (e) {
-      logUI('❌ Error:', e.message);
       reject(e);
     }
   });
@@ -524,9 +414,9 @@ async function createLot() {
   const lines = await parsePulloutXLSX(await fileInput.files[0].arrayBuffer());
   if (!lines.length) return toast('No lines found');
   const uniqueStyles = [...new Set(lines.map(l => l.style).filter(Boolean))];
-  const lot = { id: 'lot_' + uid(), lotId, day, createdBy: currentView, createdAt: new Date().toISOString(), lines, uniqueStyles };
+  const lot = { id: 'lot_' + uid(), lotId, day, createdAt: new Date().toISOString(), lines, uniqueStyles };
   await dbPut('lots', lot);
-  toast('Lot created: ' + lotId);
+  toast('Lot created!');
   fileInput.value = '';
   document.getElementById('lot-id').value = '';
   refreshView();
@@ -536,10 +426,6 @@ async function loadAllLots() {
   const lots = await dbGetAll('lots');
   lots.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   return lots;
-}
-
-async function getResponse(lotId, toShop) {
-  return await dbGet('responses', lotId + '_' + toShop) || { id: lotId + '_' + toShop, lotId, toShop, lineResponses: {}, lotDone: false };
 }
 
 async function refreshBMQ() {
@@ -552,12 +438,10 @@ async function refreshBMQ() {
       <div class="meta"><span>📅 ${l.day}</span><span>📦 ${l.lines.length} lines</span></div>
       <div class="action-btns">
         <button class="btn btn-sm" onclick="deleteLot('${l.id}')" style="color:#ef4444">🗑 Delete</button>
-        <button class="btn btn-sm" onclick="sendEmailBatch('${l.id}', ${JSON.stringify([...new Set(l.lines.map(line => line.to))])}, 'bmq')">📧 Email</button>
+        <button class="btn btn-sm" onclick="sendEmailBatch('${l.id}', ${JSON.stringify([...new Set(l.lines.map(line => line.to))])})">📧 Email All</button>
       </div>
     </div>
   `).join('');
-  const sel = document.getElementById('bmq-sales-lot-select');
-  sel.innerHTML = lots.map(l => `<option value="${l.id}">${esc(l.lotId)}</option>`).join('');
 }
 
 async function refreshShop() {
@@ -565,6 +449,8 @@ async function refreshShop() {
   const lots = await loadAllLots();
   const el = document.getElementById('shop-lots');
   const filterEl = document.getElementById('shop-filter');
+  
+  // Populate shop dropdown
   if (filterEl.options.length <= 1) {
     const allShops = ASM_REGIONS.flatMap(r => r.ases.flatMap(a => a.shops)).sort();
     allShops.forEach(shop => {
@@ -574,28 +460,56 @@ async function refreshShop() {
       filterEl.appendChild(opt);
     });
   }
+  
   if (!shopCode) {
     el.innerHTML = '<p style="color:var(--text-secondary)">Select a shop to view lots.</p>';
     return;
   }
+  
   const myLots = lots.filter(l => l.lines.some(line => line.to === shopCode));
   if (!myLots.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No lots for ' + esc(shopCode) + '.</p>'; return; }
-  el.innerHTML = myLots.map(lot => `
-    <div class="lot-card">
-      <strong>${esc(lot.lotId)}</strong>
-      <div class="meta"><span>📅 ${lot.day}</span><span>📦 ${lot.lines.length} lines</span></div>
-      <div class="action-btns">
-        <button class="btn btn-sm" onclick="sendEmailDraftForLot('${lot.id}','${shopCode}','shop')">📧 Email</button>
+  
+  // Render lots with FULL TABLE
+  el.innerHTML = myLots.map(lot => {
+    const lines = lot.lines.filter(l => l.to === shopCode);
+    return `
+      <div class="lot-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>${esc(lot.lotId)}</strong>
+          <span class="badge badge-pending">Pending</span>
+        </div>
+        <div class="meta"><span>📅 ${lot.day}</span><span>📦 ${lines.length} lines</span></div>
+        <div class="table-wrap" style="margin-top:12px">
+          <table>
+            <thead><tr><th>From</th><th>To</th><th>Style</th><th>Colour</th><th>Size</th><th>Qty</th><th>Action</th></tr></thead>
+            <tbody>
+              ${lines.map(line => `
+                <tr>
+                  <td>${esc(line.from)}</td>
+                  <td><strong>${esc(line.to)}</strong></td>
+                  <td>${esc(line.style)}</td>
+                  <td>${esc(line.colour)}</td>
+                  <td>${esc(line.size)}</td>
+                  <td>${line.qty}</td>
+                  <td><button class="btn btn-sm" style="padding:4px 8px;font-size:11px" onclick="sendEmailDraftForLot('${lot.id}','${shopCode}')">📧</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="action-btns" style="margin-top:10px">
+          <button class="btn btn-sm" onclick="sendEmailDraftForLot('${lot.id}','${shopCode}')">📧 Email Confirmation</button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 async function refreshASE() {
   const sel = document.getElementById('ase-code-select');
   if (sel.options.length === 0) {
     const allASEs = [];
-    ASM_REGIONS.forEach(r => r.ases.forEach(a => allASEs.push({ ase: a.ase, shops: a.shops })));
+    ASM_REGIONS.forEach(r => r.ases.forEach(a => allASEs.push({ ase: a.ase })));
     allASEs.forEach(a => {
       const opt = document.createElement('option');
       opt.value = a.ase;
@@ -604,82 +518,41 @@ async function refreshASE() {
     });
   }
   document.getElementById('ase-lot-day').value = today();
-  await loadASELots();
-}
-
-async function loadASELots() {
-  const aseCode = document.getElementById('ase-filter-select').value || document.getElementById('ase-code-select').value;
-  const lots = await loadAllLots();
-  const el = document.getElementById('ase-lots');
-  const filterSel = document.getElementById('ase-filter-select');
-  if (filterSel.options.length === 0) {
-    const allASEs = [];
-    ASM_REGIONS.forEach(r => r.ases.forEach(a => allASEs.push({ ase: a.ase })));
-    allASEs.forEach(a => {
-      const opt = document.createElement('option');
-      opt.value = a.ase;
-      opt.textContent = a.ase;
-      filterSel.appendChild(opt);
-    });
-  }
-  if (!aseCode) { el.innerHTML = '<p>Select ASE code.</p>'; return; }
-  el.innerHTML = '<p>Lots for: ' + esc(aseCode) + '</p>';
+  document.getElementById('ase-lots').innerHTML = '<p>ASE view ready</p>';
 }
 
 async function createLotFromASE() {
   const lotId = document.getElementById('ase-lot-id').value.trim();
-  const day = document.getElementById('ase-lot-day').value || today();
   if (!lotId) return toast('Enter Lot ID');
-  toast('ASE: Lot created');
+  toast('ASE Lot created');
   refreshView();
 }
 
 async function refreshASM() {
-  const createSel = document.getElementById('asm-create-region');
-  if (createSel && createSel.options.length === 0) {
+  const sel = document.getElementById('asm-create-region');
+  if (sel.options.length === 0) {
     ASM_REGIONS.forEach(r => {
       const o = document.createElement('option');
       o.value = r.asm;
       o.textContent = r.asm;
-      createSel.appendChild(o);
+      sel.appendChild(o);
     });
   }
   document.getElementById('asm-lot-day').value = today();
-  document.getElementById('asm-dashboard').innerHTML = '<p>ASM Dashboard</p>';
+  document.getElementById('asm-dashboard').innerHTML = '<p>ASM Dashboard ready</p>';
 }
 
 async function createLotFromView(view) {
-  toast('Feature coming soon for ' + view);
+  toast('Feature coming soon');
 }
 
-/* ========== MISSING EVENT HANDLERS ========== */
 async function deleteLot(lotId) {
   await dbDel('lots', lotId);
   toast('Lot deleted');
   refreshView();
 }
 
-function downloadXLSX() {
-  toast('Download XLSX coming soon');
-}
-
-function downloadPDF() {
-  toast('Download PDF coming soon');
-}
-
-function pickSalesFolderBMQ() {
-  toast('Sales upload coming soon');
-}
-
-function populateASEDropdown() {
-  toast('Populate ASE coming soon');
-}
-
-function populateShopDropdown() {
-  toast('Populate Shop coming soon');
-}
-
-/* ========== INITIALIZATION ========== */
+// INIT
 document.getElementById('theme-toggle').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
@@ -691,25 +564,24 @@ document.getElementById('about-btn').addEventListener('click', () => {
 });
 
 window.addEventListener('load', async () => {
-  logUI('🚀 Initializing Pullout Portal...');
+  logUI('🚀 Initializing...');
   try {
     await openDB();
-    logUI('✅ Database connected');
+    logUI('✅ DB connected');
     await refreshView();
-    logUI('✅ App ready!');
+    logUI('✅ Ready!');
   } catch (e) {
-    logUI('❌ Init error:', e.message);
+    logUI('❌ Error:', e.message);
   }
 });
 
 window.addEventListener('hashchange', refreshView);
 
-// Restore theme preference
 if (localStorage.getItem('theme') === 'dark') {
   document.body.classList.add('dark');
 }
 
-logUI('📦 Pullout Portal loaded');
+logUI('✅ Portal loaded');
 </script>
 </body>
 </html>
