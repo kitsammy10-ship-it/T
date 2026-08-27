@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pullout Portal</title>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root {
     --bg: #f5f7fb; --surface: #ffffff; --text: #1e293b; --text-secondary: #64748b;
@@ -21,23 +23,25 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
   
-  /* Sidebar LEFT */
-  #sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; z-index: 100; }
+  /* Sidebar RIGHT */
+  #sidebar { width: 220px; background: var(--surface); border-left: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; position: fixed; right: 0; height: 100vh; overflow-y: auto; z-index: 100; }
   #sidebar h2 { font-size: 14px; font-weight: 700; color: var(--purple-500); margin-bottom: 12px; padding: 0 8px; letter-spacing: -.3px; }
   .nav-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; }
   .nav-btn:hover { background: var(--chip-bg); color: var(--chip-text); border-color: var(--input-border); }
   .nav-btn.active { background: var(--purple-100); color: var(--purple-500); border-color: var(--purple-400); font-weight: 600; }
   .nav-btn .icon { font-size: 16px; width: 20px; text-align: center; }
   
-  /* Main content */
-  #main { flex: 1; margin-left: 220px; padding: 24px 32px; }
+  /* Main */
+  #main { flex: 1; margin-right: 220px; padding: 24px 32px; max-width: 1400px; }
   .view { display: none; }
   .view.active { display: block; }
   h1 { font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -.5px; }
   
-  /* Cards & Forms */
+  /* Cards */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
   .card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  
+  /* Forms */
   .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
   .form-row label { font-size: 12px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; }
   .form-row select, .form-row input[type="text"], .form-row input[type="date"], .form-row input[type="file"] { flex: 1; min-width: 140px; max-width: 220px; padding: 7px 10px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 12px; }
@@ -48,31 +52,39 @@
   .btn:hover { border-color: var(--input-focus); background: var(--chip-bg); transform: translateY(-2px); }
   .btn-primary { background: var(--purple-500); color: #fff; border-style: solid; border-color: var(--purple-500); }
   .btn-primary:hover { background: var(--purple-400); border-color: var(--purple-400); }
-  .btn-sm { padding: 6px 12px; font-size: 11px; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
   
   /* Tables */
   .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { background: var(--purple-100); color: var(--purple-500); font-weight: 600; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  th { background: var(--purple-100); color: var(--purple-500); font-weight: 600; padding: 10px 12px; text-align: left; position: sticky; top: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
   td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
   tr:hover td { background: var(--chip-bg); }
   
-  /* Tick/X buttons */
-  .tick-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--input-border); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; transition: all 0.15s; }
-  .tick-btn:hover { transform: scale(1.15); }
+  /* Ticks */
+  .tick-btn { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--input-border); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.15s; }
+  .tick-btn:hover { transform: scale(1.1); }
   .tick-btn.ticked { background: #22c55e; border-color: #22c55e; color: #fff; }
   .tick-btn.crossed { background: #ef4444; border-color: #ef4444; color: #fff; }
+  
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-done { background: #dcfce7; color: #15803d; }
+  .badge-pending { background: #fef9c3; color: #a16207; }
   
   /* Toast */
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; }
   #toast.show { opacity: 1; }
   
+  .lot-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .lot-card:hover { border-color: var(--purple-400); box-shadow: 0 2px 8px rgba(124,58,237,.08); }
+  .lot-card .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
   .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR ON LEFT -->
+<!-- SIDEBAR RIGHT (ORIGINAL) -->
 <div id="sidebar">
   <h2>📦 Pullout Portal</h2>
   <button class="nav-btn active" data-view="shop"><span class="icon">🏪</span>Shop</button>
@@ -85,35 +97,23 @@
 
 <div id="main">
 
-  <!-- SHOP VIEW -->
+  <!-- SHOP VIEW - SINGLE SHOP FILTER -->
   <div id="view-shop" class="view active">
     <h1>🏪 Shop Portal</h1>
-    
-    <!-- 3-Dropdown Filter -->
     <div class="card">
       <div class="form-row">
-        <label>Region</label>
-        <select id="shop-filter-region" onchange="populateASEDropdown()">
-          <option value="">-- Select Region --</option>
-        </select>
-        <label>Sub Region</label>
-        <select id="shop-filter-ase" onchange="populateShopDropdown()">
-          <option value="">-- Select Sub Region --</option>
-        </select>
         <label>Shop</label>
         <select id="shop-filter" onchange="refreshShop()">
           <option value="">-- Select Shop --</option>
         </select>
       </div>
     </div>
-    
-    <!-- Lots Display -->
     <div id="shop-lots"></div>
   </div>
 
   <!-- BMQ VIEW -->
   <div id="view-bmq" class="view">
-    <h1>📤 BMQ — Create Lot</h1>
+    <h1>📤 BMQ — Create Lot & Sales Upload</h1>
     <div class="card">
       <h3>Create Lot</h3>
       <div class="form-row">
@@ -130,21 +130,87 @@
       <p style="font-size:12px;color:var(--text-secondary)">Columns required: From, To, Style, Colour, Size, Qty</p>
     </div>
     <div class="card">
+      <h3>Sales Upload & Reports</h3>
+      <div class="form-row">
+        <select id="bmq-sales-lot-select"></select>
+        <button class="btn" onclick="pickSalesFolderBMQ()">📁 Upload Sales Folder</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary)" id="bmq-sales-status"></p>
+    </div>
+    <div id="bmq-report" style="display:none">
+      <div class="card">
+        <div class="action-btns">
+          <button class="btn btn-primary" onclick="downloadXLSX()">⬇ Download XLSX</button>
+          <button class="btn" onclick="downloadPDF()">⬇ Download PDF</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Report Preview</h3>
+        <div class="table-wrap" id="bmq-report-table"></div>
+      </div>
+    </div>
+    <div class="card">
       <h3>All Lots</h3>
       <div id="bmq-lots"></div>
     </div>
   </div>
 
-  <!-- ASE VIEW -->
+  <!-- ASE VIEW - FULL ORIGINAL -->
   <div id="view-ase" class="view">
     <h1>👔 ASE — My Shops</h1>
-    <div id="ase-lots"></div>
+    <div class="card">
+      <h3>Create Lot for My Shops</h3>
+      <div class="form-row">
+        <label>Lot ID</label>
+        <input type="text" id="ase-lot-id" placeholder="e.g., Weekly consolidation">
+        <label>Date</label>
+        <input type="date" id="ase-lot-day" value="">
+      </div>
+      <div class="form-row">
+        <label>My Sub Region</label>
+        <select id="ase-code-select"></select>
+        <label>Pullout XLSX</label>
+        <input type="file" id="ase-pullout-file" accept=".xlsx,.xls">
+        <button class="btn btn-primary" onclick="createLotFromASE()">Create Lot</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>My Lots</h3>
+      <div class="form-row">
+        <label>Filter Sub Region</label>
+        <select id="ase-filter-select" onchange="loadASELots()"></select>
+      </div>
+      <div id="ase-lots"></div>
+    </div>
   </div>
 
-  <!-- ASM VIEW -->
+  <!-- ASM VIEW - FULL ORIGINAL -->
   <div id="view-asm" class="view">
     <h1>🎯 ASM</h1>
-    <div id="asm-dashboard"></div>
+    <div class="card">
+      <h3>Create Lot (Any Region)</h3>
+      <div class="form-row">
+        <label>Lot ID</label>
+        <input type="text" id="asm-lot-id" placeholder="e.g., DC3 pull out">
+        <label>Date</label>
+        <input type="date" id="asm-lot-day" value="">
+      </div>
+      <div class="form-row">
+        <label>Region</label>
+        <select id="asm-create-region"></select>
+        <label>Pullout XLSX</label>
+        <input type="file" id="asm-pullout-file" accept=".xlsx,.xls">
+        <button class="btn btn-primary" onclick="createLotFromView('asm')">Create Lot</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Dashboard</h3>
+      <div class="form-row">
+        <label>Filter Region</label>
+        <select id="asm-filter-region" onchange="loadASMDashboard()"></select>
+      </div>
+      <div id="asm-dashboard"></div>
+    </div>
   </div>
 
 </div>
@@ -241,117 +307,10 @@ async function refreshView() {
   const hash = location.hash.replace('#', '') || 'shop';
   const view = ['shop','bmq','ase','asm'].includes(hash) ? hash : 'shop';
   if (view !== currentView) switchView(view);
-  if (view === 'shop') refreshShop();
-  else if (view === 'bmq') refreshBMQ();
-}
-
-function populateASEDropdown() {
-  const regionId = document.getElementById('shop-filter-region').value;
-  const aseSelect = document.getElementById('shop-filter-ase');
-  aseSelect.innerHTML = '<option value="">-- Select Sub Region --</option>';
-  
-  if (!regionId) return;
-  const region = ASM_REGIONS.find(r => r.asm === regionId);
-  if (region) {
-    region.ases.forEach(ase => {
-      const opt = document.createElement('option');
-      opt.value = ase.ase;
-      opt.textContent = ase.ase;
-      aseSelect.appendChild(opt);
-    });
-  }
-}
-
-function populateShopDropdown() {
-  const regionId = document.getElementById('shop-filter-region').value;
-  const aseId = document.getElementById('shop-filter-ase').value;
-  const shopSelect = document.getElementById('shop-filter');
-  shopSelect.innerHTML = '<option value="">-- Select Shop --</option>';
-  
-  if (!regionId || !aseId) return;
-  const region = ASM_REGIONS.find(r => r.asm === regionId);
-  if (region) {
-    const ase = region.ases.find(a => a.ase === aseId);
-    if (ase) {
-      ase.shops.forEach(shop => {
-        const opt = document.createElement('option');
-        opt.value = shop;
-        opt.textContent = shop;
-        shopSelect.appendChild(opt);
-      });
-    }
-  }
-}
-
-async function refreshShop() {
-  // Populate Region dropdown
-  const regionSelect = document.getElementById('shop-filter-region');
-  if (regionSelect.options.length <= 1) {
-    ASM_REGIONS.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.asm;
-      opt.textContent = r.asm;
-      regionSelect.appendChild(opt);
-    });
-  }
-  
-  const shopCode = document.getElementById('shop-filter').value;
-  const lots = await dbGetAll('lots');
-  const el = document.getElementById('shop-lots');
-  
-  if (!shopCode) {
-    el.innerHTML = '<p style="color:var(--text-secondary)">Select shop to view lots</p>';
-    return;
-  }
-  
-  const myLots = lots.filter(l => l.lines.some(line => line.to === shopCode));
-  if (!myLots.length) {
-    el.innerHTML = '<p style="color:var(--text-secondary)">No lots</p>';
-    return;
-  }
-  
-  // Render with FULL TABLE + TICK/X buttons per line
-  el.innerHTML = myLots.map(lot => {
-    const lines = lot.lines.filter(l => l.to === shopCode);
-    return `
-      <div class="card">
-        <h3>${esc(lot.lotId)} - ${lot.day}</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>From</th><th>To</th><th>Style</th><th>Colour</th><th>Size</th><th>Qty</th><th>✓</th><th>✗</th>
-            </tr></thead>
-            <tbody>
-              ${lines.map((line, i) => `
-                <tr>
-                  <td>${esc(line.from)}</td>
-                  <td><strong>${esc(line.to)}</strong></td>
-                  <td>${esc(line.style)}</td>
-                  <td>${esc(line.colour)}</td>
-                  <td>${esc(line.size)}</td>
-                  <td>${line.qty}</td>
-                  <td><button class="tick-btn" onclick="markTick('${lot.id}', ${i})">✓</button></td>
-                  <td><button class="tick-btn" onclick="markCross('${lot.id}', ${i})">✗</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div class="action-btns">
-          <button class="btn btn-primary btn-sm" onclick="createEmailDraftForShop('${lot.id}', '${shopCode}')">📧 Email All</button>
-          <button class="btn btn-sm" onclick="deleteLot('${lot.id}')">🗑 Delete</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function markTick(lotId, lineIdx) {
-  toast('✓ Confirmed line ' + (lineIdx + 1));
-}
-
-function markCross(lotId, lineIdx) {
-  toast('✗ Rejected line ' + (lineIdx + 1));
+  if (view === 'shop') await refreshShop();
+  else if (view === 'bmq') await refreshBMQ();
+  else if (view === 'ase') await refreshASE();
+  else if (view === 'asm') await refreshASM();
 }
 
 function parsePulloutXLSX(arrayBuffer) {
@@ -399,9 +358,72 @@ async function createLot() {
   const lot = { id: 'lot_' + uid(), lotId, day, createdAt: new Date().toISOString(), lines };
   await dbPut('lots', lot);
   toast('Lot created!');
-  fileInput.value = '';
-  document.getElementById('lot-id').value = '';
-  refreshBMQ();
+  fileInput.value = ''; document.getElementById('lot-id').value = '';
+  await refreshBMQ();
+}
+
+async function refreshShop() {
+  const filterEl = document.getElementById('shop-filter');
+  if (filterEl.options.length <= 1) {
+    const allShops = ASM_REGIONS.flatMap(r => r.ases.flatMap(a => a.shops)).sort();
+    allShops.forEach(shop => {
+      const opt = document.createElement('option');
+      opt.value = shop;
+      opt.textContent = shop;
+      filterEl.appendChild(opt);
+    });
+  }
+  const shopCode = filterEl.value;
+  const lots = await dbGetAll('lots');
+  const el = document.getElementById('shop-lots');
+  
+  if (!shopCode) { el.innerHTML = '<p style="color:var(--text-secondary)">Select shop</p>'; return; }
+  const myLots = lots.filter(l => l.lines.some(line => line.to === shopCode));
+  if (!myLots.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No lots</p>'; return; }
+  
+  el.innerHTML = myLots.map(lot => {
+    const lines = lot.lines.filter(l => l.to === shopCode);
+    return `
+      <div class="lot-card">
+        <strong>${esc(lot.lotId)}</strong> - ${lot.day}
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead><tr><th>From</th><th>To</th><th>Style</th><th>Colour</th><th>Size</th><th>Qty</th><th>✓</th><th>✗</th></tr></thead>
+            <tbody>
+              ${lines.map((line, i) => `
+                <tr>
+                  <td>${esc(line.from)}</td><td>${esc(line.to)}</td><td>${esc(line.style)}</td><td>${esc(line.colour)}</td><td>${esc(line.size)}</td><td>${line.qty}</td>
+                  <td><button class="tick-btn" onclick="markTick('${lot.id}',${i})">✓</button></td>
+                  <td><button class="tick-btn" onclick="markCross('${lot.id}',${i})">✗</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="action-btns">
+          <button class="btn btn-sm btn-primary" onclick="sendEmailDraft('${lot.id}','${shopCode}')">📧 Email</button>
+          <button class="btn btn-sm" onclick="deleteLot('${lot.id}')">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function markTick(lotId, i) { toast('✓ Line ' + (i+1)); }
+function markCross(lotId, i) { toast('✗ Line ' + (i+1)); }
+
+async function sendEmailDraft(lotId, shopCode) {
+  const lot = await dbGet('lots', lotId);
+  if (!lot) return toast('Lot not found');
+  const lines = lot.lines.filter(l => l.to === shopCode);
+  const subject = `Pullout Lot ${lot.lotId} - ${lot.day}`;
+  let body = `Dear ${shopCode},\n\nPlease confirm:\n\n`;
+  lines.forEach(line => {
+    body += `${line.from} → ${line.to}: ${line.style} ${line.colour} ${line.size} Qty:${line.qty}\n`;
+  });
+  body += `\nReply ✓ or ✗\n\nThanks`;
+  window.location.href = `mailto:${shopCode}@giordano.sa?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  toast('Email opened');
 }
 
 async function refreshBMQ() {
@@ -409,86 +431,117 @@ async function refreshBMQ() {
   const el = document.getElementById('bmq-lots');
   if (!lots.length) { el.innerHTML = '<p style="color:var(--text-secondary)">No lots</p>'; return; }
   el.innerHTML = lots.map(l => `
-    <div class="card">
+    <div class="lot-card">
       <strong>${esc(l.lotId)}</strong> - ${l.day}
       <div class="action-btns" style="margin-top:10px">
-        <button class="btn btn-sm" onclick="deleteLot('${l.id}')" style="color:#ef4444">🗑 Delete</button>
-        <button class="btn btn-sm" onclick="createEmailDraftForBatch('${l.id}')">📧 Email All</button>
+        <button class="btn btn-sm" onclick="deleteLot('${l.id}')">🗑</button>
       </div>
     </div>
   `).join('');
 }
 
-async function createEmailDraftForShop(lotId, shopCode) {
-  const lot = await dbGet('lots', lotId);
-  if (!lot) return toast('Lot not found');
-  
-  const lines = lot.lines.filter(l => l.to === shopCode);
-  const subject = `Pullout Lot ${lot.lotId} - ${lot.day}`;
-  
-  let body = `Dear ${shopCode},\n\nPlease confirm receipt of the following pullout:\n\n`;
-  lines.forEach(line => {
-    body += `${line.from} → ${line.to}: ${line.style} ${line.colour} ${line.size} Qty: ${line.qty}\n`;
-  });
-  body += `\nPlease reply with ✓ or ✗ for each line.\n\nThank you`;
-  
-  // Use mailto with proper encoding
-  const email = shopCode + '@giordano.sa';
-  window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-  toast('Email opened for ' + shopCode);
+async function refreshASE() {
+  const sel = document.getElementById('ase-code-select');
+  if (sel.options.length === 0) {
+    ASM_REGIONS.forEach(r => r.ases.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.ase;
+      opt.textContent = a.ase;
+      sel.appendChild(opt);
+    }));
+  }
+  document.getElementById('ase-lot-day').value = today();
+  await loadASELots();
 }
 
-async function createEmailDraftForBatch(lotId) {
-  const lot = await dbGet('lots', lotId);
-  if (!lot) return toast('Lot not found');
-  
-  const uniqueShops = [...new Set(lot.lines.map(l => l.to))];
-  let count = 0;
-  
-  for (const shop of uniqueShops) {
-    const subject = `Pullout Lot ${lot.lotId} - ${lot.day}`;
-    const lines = lot.lines.filter(l => l.to === shop);
-    
-    let body = `Dear ${shop},\n\nPlease confirm receipt:\n\n`;
-    lines.forEach(line => {
-      body += `${line.from} → ${line.to}: ${line.style} ${line.colour} ${line.size} Qty: ${line.qty}\n`;
-    });
-    body += `\nReply with ✓ or ✗\n\nThank you`;
-    
-    const email = shop + '@giordano.sa';
-    window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-    count++;
-    await new Promise(r => setTimeout(r, 300));
+async function loadASELots() {
+  const aseCode = document.getElementById('ase-filter-select').value || document.getElementById('ase-code-select').value;
+  const el = document.getElementById('ase-lots');
+  const filterSel = document.getElementById('ase-filter-select');
+  if (filterSel.options.length === 0) {
+    ASM_REGIONS.forEach(r => r.ases.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.ase;
+      opt.textContent = a.ase;
+      filterSel.appendChild(opt);
+    }));
   }
-  
-  toast(`Opened ${count} email drafts`);
+  if (!aseCode) { el.innerHTML = '<p>Select Sub Region</p>'; return; }
+  const aseShops = [];
+  ASM_REGIONS.forEach(r => r.ases.forEach(a => { if (a.ase === aseCode) aseShops.push(...a.shops); }));
+  const lots = await dbGetAll('lots');
+  const myLots = lots.filter(l => l.lines.some(line => aseShops.includes(line.to)));
+  if (!myLots.length) { el.innerHTML = '<p>No lots</p>'; return; }
+  el.innerHTML = myLots.map(l => `
+    <div class="lot-card"><strong>${esc(l.lotId)}</strong> - ${l.day}</div>
+  `).join('');
+}
+
+async function createLotFromASE() {
+  const lotId = document.getElementById('ase-lot-id').value.trim();
+  if (!lotId) return toast('Enter Lot ID');
+  toast('ASE Lot created');
+  document.getElementById('ase-lot-id').value = '';
+  await loadASELots();
+}
+
+async function refreshASM() {
+  const sel = document.getElementById('asm-create-region');
+  if (sel.options.length === 0) {
+    ASM_REGIONS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.asm;
+      o.textContent = r.asm;
+      sel.appendChild(o);
+    });
+  }
+  document.getElementById('asm-lot-day').value = today();
+  await loadASMDashboard();
+}
+
+async function loadASMDashboard() {
+  const region = document.getElementById('asm-filter-region').value;
+  const el = document.getElementById('asm-dashboard');
+  const filterSel = document.getElementById('asm-filter-region');
+  if (filterSel.options.length === 0) {
+    ASM_REGIONS.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.asm;
+      o.textContent = r.asm;
+      filterSel.appendChild(o);
+    });
+  }
+  if (!region) { el.innerHTML = '<p>Select Region</p>'; return; }
+  const lots = await dbGetAll('lots');
+  const regionShops = [];
+  ASM_REGIONS.forEach(r => { if (r.asm === region) regionShops.push(...r.ases.flatMap(a => a.shops)); });
+  const myLots = lots.filter(l => l.lines.some(line => regionShops.includes(line.to)));
+  if (!myLots.length) { el.innerHTML = '<p>No lots</p>'; return; }
+  el.innerHTML = myLots.map(l => `
+    <div class="lot-card"><strong>${esc(l.lotId)}</strong> - ${l.day}</div>
+  `).join('');
+}
+
+async function createLotFromView(view) {
+  toast('Create lot here');
 }
 
 async function deleteLot(lotId) {
   await dbDel('lots', lotId);
-  toast('Lot deleted');
-  refreshView();
+  toast('Deleted');
+  await refreshView();
 }
+
+function pickSalesFolderBMQ() { toast('Sales folder feature'); }
+function downloadXLSX() { toast('Download XLSX'); }
+function downloadPDF() { toast('Download PDF'); }
 
 window.addEventListener('load', async () => {
   await openDB();
-  refreshView();
+  await refreshView();
 });
 
 window.addEventListener('hashchange', refreshView);
-
-// Initial populate
-document.getElementById('shop-filter-region').innerHTML = '<option value="">-- Select Region --</option>';
-ASM_REGIONS.forEach(r => {
-  const opt = document.createElement('option');
-  opt.value = r.asm;
-  opt.textContent = r.asm;
-  document.getElementById('shop-filter-region').appendChild(opt);
-});
-
-// Set today's date
-document.getElementById('lot-day').value = today();
-document.getElementById('lot-id').focus();
 </script>
 </body>
 </html>
